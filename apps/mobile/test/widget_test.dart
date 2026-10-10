@@ -9,6 +9,7 @@ void main() {
         child: WsApp(),
       ),
     );
+    await tester.pump();
     expect(find.byType(WsApp), findsOneWidget);
   });
 }

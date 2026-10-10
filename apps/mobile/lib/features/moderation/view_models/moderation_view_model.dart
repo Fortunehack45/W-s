@@ -31,8 +31,10 @@ class ModerationState {
 }
 
 class ModerationViewModel extends StateNotifier<ModerationState> {
-  ModerationViewModel({required this.apiClient}) : super(const ModerationState()) {
-    checkStatus();
+  ModerationViewModel({required this.apiClient, bool autoFetch = false}) : super(const ModerationState()) {
+    if (autoFetch) {
+      checkStatus();
+    }
   }
 
   final ApiClient apiClient;
