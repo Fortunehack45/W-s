@@ -231,8 +231,41 @@ class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerP
                     ),
                   ],
                 ),
+              // Floating Frosted W's Momentum Pill (Giggles Image 4 style)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF14141A).withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: WsTokens.brandGold.withOpacity(0.55), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: WsTokens.brandGold.withOpacity(0.22),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const WsGlyph(size: 14, color: WsTokens.brandGold, hasGlow: true),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${numFmt.format(item['wCount'])} W\'s',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right, color: WsTokens.brandGold, size: 16),
+                  ],
+                ),
               ),
-
               // Handle
               Row(
                 children: [
@@ -317,20 +350,50 @@ class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerP
               ),
               const SizedBox(height: 16),
 
-              // Like
+              // W's Reaction Button (Replaces Heart/Like with signature W's Sign)
               GestureDetector(
-                onTap: () => setState(() => _isLiked = !_isLiked),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _isLiked = !_isLiked);
+                },
                 child: Column(
                   children: [
-                    Icon(
-                      _isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: _isLiked ? WsTokens.tiktokPink : Colors.white,
-                      size: 32,
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _isLiked ? WsTokens.brandGold.withOpacity(0.22) : Colors.black.withOpacity(0.35),
+                        border: Border.all(
+                          color: _isLiked ? WsTokens.brandGold : Colors.white24,
+                          width: _isLiked ? 1.5 : 1.0,
+                        ),
+                        boxShadow: _isLiked
+                            ? [
+                                BoxShadow(
+                                  color: WsTokens.brandGold.withOpacity(0.55),
+                                  blurRadius: 14,
+                                  spreadRadius: 2,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: WsGlyph(
+                          size: 24,
+                          color: _isLiked ? WsTokens.brandGold : Colors.white,
+                          hasGlow: _isLiked,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       numFmt.format(item['likes'] + (_isLiked ? 1 : 0)),
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        color: _isLiked ? WsTokens.brandGold : Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -347,28 +410,6 @@ class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerP
                     style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 ],
-              ),
-              const SizedBox(height: 14),
-
-              // W's Stake Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: WsTokens.brandGold,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: WsTokens.brandGold.withOpacity(0.4), blurRadius: 6),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const Icon(Icons.bolt, color: Colors.black, size: 20),
-                    Text(
-                      '${numFmt.format(item['wCount'])}',
-                      style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w900),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 14),
 

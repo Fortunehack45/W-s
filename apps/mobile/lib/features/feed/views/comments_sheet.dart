@@ -211,9 +211,11 @@ class _CommentsSheetState extends ConsumerState<CommentsSheet> {
                     ),
                     Column(
                       children: [
-                        const Icon(Icons.favorite_border, size: 16, color: WsTokens.textMuted),
-                        if (c.likeCount > 0)
-                          Text('${c.likeCount}', style: const TextStyle(fontSize: 10, color: WsTokens.textMuted)),
+                        const WsGlyph(size: 14, color: WsTokens.textMuted, hasGlow: false),
+                        if (c.likeCount > 0) ...[
+                          const SizedBox(height: 2),
+                          Text('${c.likeCount}', style: const TextStyle(fontSize: 10, color: WsTokens.textMuted, fontWeight: FontWeight.bold)),
+                        ],
                       ],
                     ),
                   ],

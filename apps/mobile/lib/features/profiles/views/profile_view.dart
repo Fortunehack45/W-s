@@ -299,7 +299,7 @@ class ProfileView extends ConsumerWidget {
                       const SizedBox(width: 32),
                       _StatColumn(
                         title: "Total W's Earned",
-                        value: fullNumberFormat.format(profile.netLifetimeWEarned),
+                        value: '₩ ${fullNumberFormat.format(profile.netLifetimeWEarned)}',
                         isGold: true,
                       ),
                     ],
@@ -425,7 +425,11 @@ class ProfileView extends ConsumerWidget {
                         onTap: () => ref.read(profileViewModelProvider.notifier).selectTab(3),
                       ),
                       _ProfileTabIcon(
-                        icon: Icons.favorite_border,
+                        customIcon: WsGlyph(
+                          size: 20,
+                          color: state.selectedTab == 4 ? Colors.white : Colors.white38,
+                          hasGlow: state.selectedTab == 4,
+                        ),
                         isSelected: state.selectedTab == 4,
                         onTap: () => ref.read(profileViewModelProvider.notifier).selectTab(4),
                       ),
@@ -450,7 +454,7 @@ class ProfileView extends ConsumerWidget {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final views = ['126', '1.2M', '34.5K', '580K', '89.2K', '2.4M'][index % 6];
-                    final wEarned = ['1,240 W', '42,800 W', '3,100 W', '19,500 W', '8,200 W', '95,000 W'][index % 6];
+                    final wEarned = ['₩ 1,240', '₩ 42,800', '₩ 3,100', '₩ 19,500', '₩ 8,200', '₩ 95,000'][index % 6];
                     return Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E1E24),
@@ -465,7 +469,7 @@ class ProfileView extends ConsumerWidget {
                               child: Icon(Icons.play_circle_outline, color: Colors.white.withOpacity(0.3), size: 36),
                             ),
                           ),
-                          // Top Right W's Badge
+                          // Top Right W's Badge (Giggles Image 3 style)
                           Positioned(
                             top: 4,
                             right: 4,
@@ -482,7 +486,7 @@ class ProfileView extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          // Bottom Left View Count (Screenshot 4 style)
+                          // Bottom Left View Count (Giggles Image 3 style)
                           Positioned(
                             bottom: 4,
                             left: 4,
@@ -515,19 +519,86 @@ class ProfileView extends ConsumerWidget {
                     _BackedPoolCard(
                       videoTitle: "Why Vertical AI is Eating Media",
                       creator: "@tech_guru",
-                      stakedW: "2,500 W",
-                      currentValue: "4,120 W",
+                      stakedW: "₩ 2,500",
+                      currentValue: "₩ 4,120",
                       gain: "+64.8%",
                     ),
                     const SizedBox(height: 10),
                     _BackedPoolCard(
                       videoTitle: "Night Tokyo Street Food Tour 4K",
                       creator: "@wanderlust_jp",
-                      stakedW: "1,000 W",
-                      currentValue: "1,450 W",
+                      stakedW: "₩ 1,000",
+                      currentValue: "₩ 1,450",
                       gain: "+45.0%",
                     ),
                   ],
+                ),
+              ),
+            )
+          else if (state.selectedTab == 4)
+            // W's Reacted Videos Tab (Replacing Heart likes with W's Sign)
+            SliverPadding(
+              padding: const EdgeInsets.all(4.0),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 3,
+                  mainAxisSpacing: 3,
+                  childAspectRatio: 0.72,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final views = ['240K', '890K', '1.1M', '45.2K'][index % 4];
+                    final wEarned = ['₩ 52,000', '₩ 130,965', '₩ 18,400', '₩ 9,500'][index % 4];
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1E24),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Container(
+                            color: const Color(0xFF24242E),
+                            child: Center(
+                              child: Icon(Icons.play_circle_outline, color: Colors.white.withOpacity(0.3), size: 36),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.75),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: WsTokens.brandGold.withOpacity(0.5)),
+                              ),
+                              child: Text(
+                                wEarned,
+                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: WsTokens.brandGold),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 4,
+                            left: 4,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.play_arrow, color: Colors.white, size: 14),
+                                const SizedBox(width: 2),
+                                Text(
+                                  views,
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  childCount: 4,
                 ),
               ),
             )
@@ -593,12 +664,14 @@ class _StatColumn extends StatelessWidget {
 
 class _ProfileTabIcon extends StatelessWidget {
   const _ProfileTabIcon({
-    required this.icon,
+    this.icon,
+    this.customIcon,
     required this.isSelected,
     required this.onTap,
   });
 
-  final IconData icon;
+  final IconData? icon;
+  final Widget? customIcon;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -618,10 +691,13 @@ class _ProfileTabIcon extends StatelessWidget {
               ),
             ),
           ),
-          child: Icon(
-            icon,
-            size: 22,
-            color: isSelected ? Colors.white : Colors.white38,
+          child: Center(
+            child: customIcon ??
+                Icon(
+                  icon,
+                  size: 22,
+                  color: isSelected ? Colors.white : Colors.white38,
+                ),
           ),
         ),
       ),

@@ -1,11 +1,15 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/design_system/tokens.dart';
+import '../../../core/design_system/ws_glyph.dart';
 import '../../moderation/views/appeal_modal.dart';
 import '../view_models/feed_view_model.dart';
 import 'comments_sheet.dart';
+import 'video_pool_market_sheet.dart';
 
 class VideoFeedView extends ConsumerStatefulWidget {
   const VideoFeedView({super.key});
@@ -44,8 +48,8 @@ class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
               final video = videos[index];
               return _VideoFeedCard(
                 video: video,
-                onOpenPool: () => _openPoolBottomSheet(context, video.id),
-                onOpenComments: () => _openComments(context, video.id),
+                onOpenPool: () => _openPoolBottomSheet(context, video),
+                onOpenComments: () => _openPoolBottomSheet(context, video),
                 onRepost: () => _repostVideo(context, video.id),
                 onSave: () => _saveVideo(context, video.id),
                 onShare: () => _shareVideo(context, video.id),
@@ -68,9 +72,9 @@ class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           _FeedTab(label: "Top W's", isSelected: false, onTap: () {}),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 16),
                           _FeedTab(label: 'Following', isSelected: false, onTap: () {}),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 16),
                           _FeedTab(label: 'For You', isSelected: true, onTap: () {}),
                         ],
                       ),
@@ -86,15 +90,6 @@ class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
           ),
         ],
       ),
-    );
-  }
-
-  void _openComments(BuildContext context, String videoId) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => CommentsSheet(videoId: videoId),
     );
   }
 
@@ -124,16 +119,13 @@ class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
     );
   }
 
-  void _openPoolBottomSheet(BuildContext context, String videoId) {
-    ref.read(feedViewModelProvider.notifier).fetchPoolAndPosition(videoId);
+  void _openPoolBottomSheet(BuildContext context, VideoFeedItem video) {
+    ref.read(feedViewModelProvider.notifier).fetchPoolAndPosition(video.id);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: WsTokens.surfaceElevated,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => _VideoPoolBottomSheet(videoId: videoId),
+      backgroundColor: Colors.transparent,
+      builder: (_) => VideoPoolMarketSheet(video: video),
     );
   }
 }
@@ -200,7 +192,7 @@ class _VideoFeedCard extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     Colors.black,
-                    Colors.deepPurple.shade900.withOpacity(0.4),
+                    Colors.deepPurple.shade900.withOpacity(0.35),
                     Colors.black,
                   ],
                   begin: Alignment.topCenter,
@@ -208,7 +200,7 @@ class _VideoFeedCard extends StatelessWidget {
                 ),
               ),
               child: Center(
-                child: Icon(Icons.play_circle_outline, color: Colors.white.withOpacity(0.25), size: 72),
+                child: Icon(Icons.play_circle_outline, color: Colors.white.withOpacity(0.2), size: 72),
               ),
             ),
           ),
@@ -219,13 +211,14 @@ class _VideoFeedCard extends StatelessWidget {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 280,
+          height: 320,
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  Colors.black.withOpacity(0.85),
+                  Colors.black.withOpacity(0.4),
+                  Colors.black.withOpacity(0.9),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -234,10 +227,52 @@ class _VideoFeedCard extends StatelessWidget {
           ),
         ),
 
-        // Video Info (Creator, Title, Description)
+        // Floating Frosted-Glass W's Momentum Pill (Giggles Image 4 aesthetic)
         Positioned(
           left: 16,
-          bottom: 30,
+          bottom: video.isSponsored ? 190 : 155,
+          child: GestureDetector(
+            onTap: onOpenPool,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: const Color(0xFF14141A).withOpacity(0.85),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: WsTokens.brandGold.withOpacity(0.55), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: WsTokens.brandGold.withOpacity(0.22),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const WsGlyph(size: 15, color: WsTokens.brandGold, hasGlow: true),
+                  const SizedBox(width: 7),
+                  Text(
+                    '${numberFormat.format(video.wCount)} W\'s',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right, color: WsTokens.brandGold, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Video Creator Info (Username, Title, Description, Sponsored Badge)
+        Positioned(
+          left: 16,
+          bottom: 28,
           right: 90,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +308,7 @@ class _VideoFeedCard extends StatelessWidget {
                   const Icon(Icons.verified, color: WsTokens.brandGold, size: 16),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 video.title,
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.white),
@@ -321,7 +356,7 @@ class _VideoFeedCard extends StatelessWidget {
           ),
         ),
 
-        // Right Action Bar
+        // Right Action Bar (Super Clean Giggles-inspired Layout)
         Positioned(
           right: 12,
           bottom: 24,
@@ -364,56 +399,27 @@ class _VideoFeedCard extends StatelessWidget {
               ),
               const SizedBox(height: 18),
 
-              // 2. Like Button
-              _ActionButton(
-                icon: Icons.favorite,
-                iconColor: Colors.white,
-                label: numberFormat.format(video.repostCount > 0 ? video.repostCount * 12 : 1420),
-                onTap: () {},
+              // 2. Official W's Sign Reaction Button (Replaces Like/Heart with W's Sign)
+              _WsReactionButton(
+                initialCount: video.wCount > 0 ? video.wCount : 52000,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
-              // 3. Comments / Live Chat
+              // 3. Comments / Community Chat (Opens VideoPoolMarketSheet)
               _ActionButton(
                 icon: Icons.chat_bubble_outline,
-                label: numberFormat.format(video.commentCount),
+                label: numberFormat.format(video.commentCount > 0 ? video.commentCount : 242),
                 onTap: onOpenComments,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
-              // 4. Dynamic W's Counter Button (The core momentum indicator)
-              GestureDetector(
-                onTap: onOpenPool,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: WsTokens.brandGold,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: WsTokens.brandGold.withOpacity(0.4),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.bolt, color: Colors.black, size: 24),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${numberFormat.format(video.wCount)} W',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              // 4. Repost Button
+              _ActionButton(
+                icon: Icons.repeat,
+                label: numberFormat.format(video.repostCount > 0 ? video.repostCount : 599),
+                onTap: onRepost,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // 5. Bookmark / Save
               _ActionButton(
@@ -421,7 +427,7 @@ class _VideoFeedCard extends StatelessWidget {
                 label: 'Save',
                 onTap: onSave,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // 6. Share
               _ActionButton(
@@ -429,7 +435,7 @@ class _VideoFeedCard extends StatelessWidget {
                 label: 'Share',
                 onTap: onShare,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
 
               // 7. Spinning Disc
               _SpinningMusicDisc(initial: video.creatorUsername.isNotEmpty ? video.creatorUsername[0] : 'W'),
@@ -437,6 +443,120 @@ class _VideoFeedCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Official W's Sign Reaction Button:
+/// Replaces hearts/likes with the signature W's Sign (WsGlyph),
+/// featuring an animated scale bounce, glowing gold radiance, and haptic feedback.
+class _WsReactionButton extends StatefulWidget {
+  const _WsReactionButton({
+    required this.initialCount,
+    this.onChanged,
+  });
+
+  final int initialCount;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  State<_WsReactionButton> createState() => _WsReactionButtonState();
+}
+
+class _WsReactionButtonState extends State<_WsReactionButton> with SingleTickerProviderStateMixin {
+  late bool _isReacted;
+  late int _count;
+  late AnimationController _animController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _isReacted = false;
+    _count = widget.initialCount;
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 260),
+    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.35), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.35, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(parent: _animController, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  void _toggleReaction() {
+    HapticFeedback.lightImpact();
+    _animController.forward(from: 0.0);
+    setState(() {
+      _isReacted = !_isReacted;
+      if (_isReacted) {
+        _count += 1;
+      } else {
+        _count = max(0, _count - 1);
+      }
+    });
+    widget.onChanged?.call(_isReacted);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final numberFormat = NumberFormat.compact();
+
+    return GestureDetector(
+      onTap: _toggleReaction,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ScaleTransition(
+            scale: _scaleAnimation,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _isReacted
+                    ? WsTokens.brandGold.withOpacity(0.22)
+                    : Colors.black.withOpacity(0.35),
+                border: Border.all(
+                  color: _isReacted ? WsTokens.brandGold : Colors.white24,
+                  width: _isReacted ? 1.5 : 1.0,
+                ),
+                boxShadow: _isReacted
+                    ? [
+                        BoxShadow(
+                          color: WsTokens.brandGold.withOpacity(0.55),
+                          blurRadius: 14,
+                          spreadRadius: 2,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Center(
+                child: WsGlyph(
+                  size: 24,
+                  color: _isReacted ? WsTokens.brandGold : Colors.white,
+                  hasGlow: _isReacted,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            numberFormat.format(_count),
+            style: TextStyle(
+              color: _isReacted ? WsTokens.brandGold : Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -460,7 +580,7 @@ class _ActionButton extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: iconColor, size: 30),
+          Icon(icon, color: iconColor, size: 28),
           const SizedBox(height: 4),
           Text(
             label,
@@ -523,201 +643,6 @@ class _SpinningMusicDiscState extends State<_SpinningMusicDisc> with SingleTicke
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Dynamic W's Momentum Pool Bottom Sheet:
-/// Displays the bonding curve price, total W pool (surging or falling),
-/// and supports dropping W's or cashing out back to wallet.
-class _VideoPoolBottomSheet extends ConsumerStatefulWidget {
-  const _VideoPoolBottomSheet({required this.videoId});
-  final String videoId;
-
-  @override
-  ConsumerState<_VideoPoolBottomSheet> createState() => _VideoPoolBottomSheetState();
-}
-
-class _VideoPoolBottomSheetState extends ConsumerState<_VideoPoolBottomSheet> {
-  int _stakeInput = 10;
-  bool _isCashingOut = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final state = ref.watch(feedViewModelProvider);
-    final pool = state.selectedPool;
-    final position = state.currentPosition;
-    final numberFormat = NumberFormat('#,###');
-
-    if (state.isLoading && pool == null) {
-      return const SizedBox(
-        height: 300,
-        child: Center(child: CircularProgressIndicator(color: WsTokens.brandGold)),
-      );
-    }
-
-    final currentW = pool?.currentWCount ?? 0;
-    final userShares = position?.sharesOwned ?? 0;
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(color: WsTokens.divider, borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: const [
-                  Icon(Icons.bolt, color: WsTokens.brandGold, size: 26),
-                  SizedBox(width: 8),
-                  Text(
-                    "Video W's Momentum Pool",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: WsTokens.textPrimary),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: WsTokens.brandGold.withOpacity(0.18),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: WsTokens.brandGold.withOpacity(0.3)),
-                ),
-                child: Text(
-                  '${numberFormat.format(currentW)} W POOL',
-                  style: const TextStyle(color: WsTokens.brandGold, fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Community members stake Ws to back this video. As backing surges, price rises. When backers cash out, pool size decreases. 2% royalty paid to creator on every trade.',
-            style: TextStyle(fontSize: 12, color: WsTokens.textSecondary),
-          ),
-          const SizedBox(height: 16),
-
-          // User's Position Widget
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: WsTokens.surfaceBlack,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: WsTokens.divider),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('YOUR ACTIVE STAKE', style: TextStyle(fontSize: 11, color: WsTokens.textMuted, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$userShares Shares Owned',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: WsTokens.textPrimary),
-                    ),
-                  ],
-                ),
-                if (userShares > 0)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent.shade400,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    onPressed: _isCashingOut
-                        ? null
-                        : () async {
-                            setState(() => _isCashingOut = true);
-                            await ref.read(feedViewModelProvider.notifier).unstakeW(widget.videoId, userShares);
-                            if (mounted) setState(() => _isCashingOut = false);
-                          },
-                    child: _isCashingOut
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Cash Out W', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Preset Stake Selector
-          const Text("Back this video with W's:", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: WsTokens.textPrimary)),
-          const SizedBox(height: 10),
-          Row(
-            children: [5, 10, 25, 50, 100].map((amount) {
-              final isSelected = _stakeInput == amount;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3.0),
-                  child: InkWell(
-                    onTap: () => setState(() => _stakeInput = amount),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? WsTokens.brandGold : WsTokens.surfaceBlack,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: isSelected ? WsTokens.brandGold : WsTokens.divider),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '$amount W',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.black : WsTokens.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: WsTokens.brandEmerald,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () async {
-                await ref.read(feedViewModelProvider.notifier).stakeW(widget.videoId, _stakeInput);
-                if (mounted) Navigator.pop(context);
-              },
-              child: Text(
-                'Drop $_stakeInput W\'s  ⚡',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

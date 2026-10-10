@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+export 'ws_glyph.dart';
 
 /// Design tokens defining colors, typography, and visual styling for W's.
 class WColors {
