@@ -16,7 +16,6 @@ class VideoFeedView extends ConsumerStatefulWidget {
 
 class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
   final PageController _pageController = PageController();
-  int _currentIndex = 0;
 
   @override
   void dispose() {
@@ -39,7 +38,6 @@ class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
             scrollDirection: Axis.vertical,
             itemCount: videos.length,
             onPageChanged: (index) {
-              setState(() => _currentIndex = index);
               ref.read(feedViewModelProvider.notifier).fetchPoolAndPosition(videos[index].id);
             },
             itemBuilder: (context, index) {

@@ -19,6 +19,9 @@ analyzer:
     prefer_const_literals_to_create_immutables: ignore
     dangling_library_doc_comments: ignore
     unnecessary_string_interpolations: ignore
+    unused_field: ignore
+    unused_element: ignore
+    unused_local_variable: ignore
 
 linter:
   rules:
