@@ -3,13 +3,14 @@ import '../../../core/network/api_client.dart';
 import '../models/auction_models.dart';
 
 class AuctionViewModel extends ChangeNotifier {
-  final ApiClient _apiClient;
+  AuctionViewModel({required ApiClient apiClient}) : _apiClient = apiClient {
+    fetchActiveAuctions();
+  }
 
+  final ApiClient _apiClient;
   List<AuctionListingItem> _activeListings = [];
   bool _isLoading = false;
   String? _errorMessage;
-
-  AuctionViewModel({required ApiClient apiClient}) : _apiClient = apiClient;
 
   List<AuctionListingItem> get activeListings => _activeListings;
   bool get isLoading => _isLoading;
@@ -22,7 +23,8 @@ class AuctionViewModel extends ChangeNotifier {
 
     try {
       final res = await _apiClient.get('/auctions/active');
-      final list = (res['listings'] as List<dynamic>?)
+      final data = res.data as Map<String, dynamic>;
+      final list = (data['listings'] as List<dynamic>?)
               ?.map((e) => AuctionListingItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [];
@@ -45,7 +47,7 @@ class AuctionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiClient.post('/auctions/listings', {
+      await _apiClient.post('/auctions/listings', data: {
         'cardInstanceId': cardInstanceId,
         'minimumBidW': minimumBidW,
         'durationMinutes': durationMinutes,
@@ -70,7 +72,7 @@ class AuctionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiClient.post('/auctions/$listingId/bid', {
+      await _apiClient.post('/auctions/$listingId/bid', data: {
         'bidAmountW': bidAmountW,
       });
       await fetchActiveAuctions();
@@ -89,7 +91,7 @@ class AuctionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiClient.post('/auctions/$listingId/settle', {});
+      await _apiClient.post('/auctions/$listingId/settle', data: {});
       await fetchActiveAuctions();
       return true;
     } catch (e) {

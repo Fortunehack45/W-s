@@ -3,14 +3,16 @@ import '../../../core/network/api_client.dart';
 import '../models/prediction_models.dart';
 
 class PredictionViewModel extends ChangeNotifier {
-  final ApiClient _apiClient;
+  PredictionViewModel({required ApiClient apiClient}) : _apiClient = apiClient {
+    fetchMarkets();
+    fetchMyPredictions();
+  }
 
+  final ApiClient _apiClient;
   List<PredictionMarketItem> _markets = [];
   List<UserPredictionRecord> _myPredictions = [];
   bool _isLoading = false;
   String? _errorMessage;
-
-  PredictionViewModel({required ApiClient apiClient}) : _apiClient = apiClient;
 
   List<PredictionMarketItem> get markets => _markets;
   List<UserPredictionRecord> get myPredictions => _myPredictions;
@@ -24,7 +26,8 @@ class PredictionViewModel extends ChangeNotifier {
 
     try {
       final res = await _apiClient.get('/predictions/markets');
-      final list = (res['markets'] as List<dynamic>?)
+      final data = res.data as Map<String, dynamic>;
+      final list = (data['markets'] as List<dynamic>?)
               ?.map((e) => PredictionMarketItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [];
@@ -40,7 +43,8 @@ class PredictionViewModel extends ChangeNotifier {
   Future<void> fetchMyPredictions() async {
     try {
       final res = await _apiClient.get('/predictions/my');
-      final list = (res['predictions'] as List<dynamic>?)
+      final data = res.data as Map<String, dynamic>;
+      final list = (data['predictions'] as List<dynamic>?)
               ?.map((e) => UserPredictionRecord.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [];
@@ -59,7 +63,7 @@ class PredictionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiClient.post('/predictions/markets/$marketId/predict', {
+      await _apiClient.post('/predictions/markets/$marketId/predict', data: {
         'optionId': optionId,
         'points': points,
       });

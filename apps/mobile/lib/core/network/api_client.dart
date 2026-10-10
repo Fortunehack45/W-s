@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// AppApiException represents normalized API error responses.
 class AppApiException implements Exception {
@@ -55,4 +56,29 @@ class ApiClient {
   }
 
   Dio get client => _dio;
+
+  Future<Response<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) =>
+      _dio.get<T>(path, queryParameters: queryParameters, options: options);
+
+  Future<Response<T>> post<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) =>
+      _dio.post<T>(path, data: data, queryParameters: queryParameters, options: options);
+
+  Future<Response<T>> delete<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) =>
+      _dio.delete<T>(path, data: data, queryParameters: queryParameters, options: options);
 }
+
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());

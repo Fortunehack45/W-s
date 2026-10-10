@@ -439,19 +439,16 @@ class _CreateVideoViewState extends ConsumerState<CreateVideoView> {
                               // Push to feed state
                               final newId = 'vid-${DateTime.now().millisecondsSinceEpoch}';
                               final feedNotifier = ref.read(feedViewModelProvider.notifier);
-                              feedNotifier.state = feedNotifier.state.copyWith(
-                                videos: [
-                                  VideoFeedItem(
-                                    id: newId,
-                                    creatorUsername: 'you',
-                                    title: title,
-                                    description: _descController.text.trim(),
-                                    wCount: 0,
-                                    repostCount: 0,
-                                    commentCount: 0,
-                                  ),
-                                  ...feedNotifier.state.videos,
-                                ],
+                              feedNotifier.prependVideo(
+                                VideoFeedItem(
+                                  id: newId,
+                                  creatorUsername: 'you',
+                                  title: title,
+                                  description: _descController.text.trim(),
+                                  wCount: 0,
+                                  repostCount: 0,
+                                  commentCount: 0,
+                                ),
                               );
                               if (mounted) {
                                 Navigator.pop(ctx);

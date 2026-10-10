@@ -110,6 +110,10 @@ class FeedViewModel extends StateNotifier<FeedState> {
     ]);
   }
 
+  void prependVideo(VideoFeedItem video) {
+    state = state.copyWith(videos: [video, ...state.videos]);
+  }
+
   Future<void> fetchPoolAndPosition(String videoId) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {

@@ -70,3 +70,43 @@ class WRadius {
   static const double lg = 16.0;
   static const double pill = 999.0;
 }
+
+/// Canonical design token aliases for feature views
+class AppColors {
+  static const Color background = Color(0xFF0A0A0E);
+  static const Color surface = Color(0xFF14141A);
+  static const Color surfaceBorder = Color(0xFF282838);
+  static const Color neonGold = Color(0xFFFFD700);
+  static const Color emeraldSuccess = Color(0xFF00E676);
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFFA0A0B2);
+  static const Color textTertiary = Color(0xFF65657A);
+}
+
+class AppSpacing {
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 16.0;
+  static const double lg = 24.0;
+  static const double xl = 32.0;
+  static const double xxl = 48.0;
+}
+
+class AppRadius {
+  static const double sm = 8.0;
+  static const double md = 12.0;
+  static const double lg = 16.0;
+  static const double full = 999.0;
+}
+
+class AppTypography {
+  static const TextStyle displayMedium = TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold);
+  static const TextStyle titleLarge = TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold);
+  static const TextStyle titleMedium = TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600);
+  static const TextStyle titleSmall = TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600);
+  static const TextStyle bodyLarge = TextStyle(color: Colors.white, fontSize: 16);
+  static const TextStyle bodyMedium = TextStyle(color: Colors.white, fontSize: 14);
+  static const TextStyle bodySmall = TextStyle(color: Colors.white70, fontSize: 12);
+  static const TextStyle labelSmall = TextStyle(color: Colors.white60, fontSize: 11);
+  static const TextStyle labelMedium = TextStyle(color: Colors.white60, fontSize: 12, fontWeight: FontWeight.w500);
+}

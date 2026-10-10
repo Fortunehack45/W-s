@@ -3,14 +3,15 @@ import '../../../core/network/api_client.dart';
 import '../models/ad_and_monetization_models.dart';
 
 class MonetizationViewModel extends ChangeNotifier {
-  final ApiClient _apiClient;
+  MonetizationViewModel({required ApiClient apiClient}) : _apiClient = apiClient {
+    fetchSummary();
+  }
 
+  final ApiClient _apiClient;
   MonetizationSummary? _summary;
-  List<AdCampaign> _myCampaigns = [];
+  final List<AdCampaign> _myCampaigns = [];
   bool _isLoading = false;
   String? _errorMessage;
-
-  MonetizationViewModel({required ApiClient apiClient}) : _apiClient = apiClient;
 
   MonetizationSummary? get summary => _summary;
   List<AdCampaign> get myCampaigns => _myCampaigns;
@@ -24,7 +25,8 @@ class MonetizationViewModel extends ChangeNotifier {
 
     try {
       final res = await _apiClient.get('/monetization/summary');
-      _summary = MonetizationSummary.fromJson(res);
+      final data = res.data as Map<String, dynamic>;
+      _summary = MonetizationSummary.fromJson(data);
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -39,7 +41,7 @@ class MonetizationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiClient.post('/profiles/premium/buy', {});
+      await _apiClient.post('/profiles/premium/buy', data: {});
       await fetchSummary();
       return true;
     } catch (e) {
@@ -56,7 +58,7 @@ class MonetizationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiClient.post('/monetization/apply', {});
+      await _apiClient.post('/monetization/apply', data: {});
       await fetchSummary();
       return true;
     } catch (e) {
@@ -77,7 +79,7 @@ class MonetizationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _apiClient.post('/monetization/payouts', {
+      await _apiClient.post('/monetization/payouts', data: {
         'amountCents': amountCents,
         'method': method,
         'account': account,
@@ -106,7 +108,7 @@ class MonetizationViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final res = await _apiClient.post('/ads/campaigns', {
+      final res = await _apiClient.post('/ads/campaigns', data: {
         'videoId': videoId,
         'name': name,
         'headline': headline,
@@ -115,7 +117,8 @@ class MonetizationViewModel extends ChangeNotifier {
         'budgetCents': budgetCents,
         'cpmBidCents': cpmBidCents,
       });
-      final camp = AdCampaign.fromJson(res);
+      final data = res.data as Map<String, dynamic>;
+      final camp = AdCampaign.fromJson(data);
       _myCampaigns.insert(0, camp);
       return true;
     } catch (e) {

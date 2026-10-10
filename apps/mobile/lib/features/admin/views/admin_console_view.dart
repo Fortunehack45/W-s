@@ -180,14 +180,14 @@ class _AdminConsoleViewState extends State<AdminConsoleView> with SingleTickerPr
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: isRestr ? Colors.red.withOpacity(0.2) : Colors.emerald.withOpacity(0.2),
+                            color: isRestr ? Colors.red.withOpacity(0.2) : WsTokens.brandEmerald.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: isRestr ? Colors.red : Colors.emerald, width: 0.8),
+                            border: Border.all(color: isRestr ? Colors.red : WsTokens.brandEmerald, width: 0.8),
                           ),
                           child: Text(
                             isRestr ? 'RESTRICTED (BOT)' : 'NORMAL',
                             style: TextStyle(
-                              color: isRestr ? Colors.red : Colors.emerald,
+                              color: isRestr ? Colors.red : WsTokens.brandEmerald,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -206,7 +206,7 @@ class _AdminConsoleViewState extends State<AdminConsoleView> with SingleTickerPr
                       children: [
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isRestr ? Colors.emerald : Colors.red.shade700,
+                            backgroundColor: isRestr ? WsTokens.brandEmerald : Colors.red.shade700,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
@@ -369,7 +369,7 @@ class _AdminConsoleViewState extends State<AdminConsoleView> with SingleTickerPr
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.emerald, foregroundColor: Colors.white),
+                        style: ElevatedButton.styleFrom(backgroundColor: WsTokens.brandEmerald, foregroundColor: Colors.white),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Appeal approved. Account restored.')));
                         },

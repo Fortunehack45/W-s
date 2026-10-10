@@ -16,7 +16,6 @@ class VideoFeedView extends ConsumerStatefulWidget {
 
 class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
   final PageController _pageController = PageController();
-  int _currentIndex = 0;
 
   @override
   void dispose() {
@@ -525,25 +524,6 @@ class _SpinningMusicDiscState extends State<_SpinningMusicDisc> with SingleTicke
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 28),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-          ),
-        ],
       ),
     );
   }

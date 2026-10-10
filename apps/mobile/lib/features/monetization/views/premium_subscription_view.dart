@@ -52,7 +52,7 @@ class _PremiumSubscriptionViewState extends State<PremiumSubscriptionView> {
             const SizedBox(height: 16),
             const Text(
               'Unlock W\'s Premium',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.black),
+              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -105,7 +105,7 @@ class _PremiumSubscriptionViewState extends State<PremiumSubscriptionView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
                   Text('Subscription', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  Text('$4.99 / month', style: TextStyle(color: WsTokens.brandGold, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(r'$4.99 / month', style: TextStyle(color: WsTokens.brandGold, fontWeight: FontWeight.bold, fontSize: 16)),
                 ],
               ),
             ),

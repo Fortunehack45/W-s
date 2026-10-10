@@ -82,7 +82,7 @@ class _DirectMessageChatViewState extends State<DirectMessageChatView> {
                 ),
                 Text(
                   'Active now',
-                  style: const TextStyle(color: Colors.emerald, fontSize: 11, fontWeight: FontWeight.w500),
+                  style: const TextStyle(color: WsTokens.brandEmerald, fontSize: 11, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
