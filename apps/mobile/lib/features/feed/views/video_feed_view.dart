@@ -5,10 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/design_system/tokens.dart';
-import '../../../core/design_system/ws_glyph.dart';
 import '../../moderation/views/appeal_modal.dart';
 import '../view_models/feed_view_model.dart';
-import 'comments_sheet.dart';
 import 'video_pool_market_sheet.dart';
 
 class VideoFeedView extends ConsumerStatefulWidget {
@@ -453,11 +451,9 @@ class _VideoFeedCard extends StatelessWidget {
 class _WsReactionButton extends StatefulWidget {
   const _WsReactionButton({
     required this.initialCount,
-    this.onChanged,
   });
 
   final int initialCount;
-  final ValueChanged<bool>? onChanged;
 
   @override
   State<_WsReactionButton> createState() => _WsReactionButtonState();
@@ -501,7 +497,6 @@ class _WsReactionButtonState extends State<_WsReactionButton> with SingleTickerP
         _count = max(0, _count - 1);
       }
     });
-    widget.onChanged?.call(_isReacted);
   }
 
   @override
@@ -565,12 +560,10 @@ class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
     required this.label,
-    this.iconColor = Colors.white,
     required this.onTap,
   });
   final IconData icon;
   final String label;
-  final Color iconColor;
   final VoidCallback onTap;
 
   @override
@@ -580,7 +573,7 @@ class _ActionButton extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: iconColor, size: 28),
+          Icon(icon, color: Colors.white, size: 28),
           const SizedBox(height: 4),
           Text(
             label,

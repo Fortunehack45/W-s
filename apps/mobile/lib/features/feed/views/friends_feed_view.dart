@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/design_system/tokens.dart';
@@ -231,6 +232,7 @@ class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerP
                     ),
                   ],
                 ),
+              ),
               // Floating Frosted W's Momentum Pill (Giggles Image 4 style)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

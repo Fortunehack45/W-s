@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/design_system/tokens.dart';
-import '../../../core/design_system/ws_glyph.dart';
 import '../../moderation/view_models/moderation_view_model.dart';
 import '../models/video_pool_models.dart';
 import '../view_models/feed_view_model.dart';

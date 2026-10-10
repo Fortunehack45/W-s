@@ -16,6 +16,9 @@ class VideoWPool {
   final int basePriceW;
   final int creatorRoyaltyBps;
 
+  int get pricePerShareW =>
+      totalShares > 0 ? (reserveBalance / totalShares).round().clamp(1, 999999) : (basePriceW > 0 ? basePriceW : 1);
+
   factory VideoWPool.fromJson(Map<String, dynamic> json) {
     return VideoWPool(
       videoId: json['videoId'] as String? ?? '',
