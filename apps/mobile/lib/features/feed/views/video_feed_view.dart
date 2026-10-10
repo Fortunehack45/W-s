@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/design_system/tokens.dart';
 import '../../moderation/views/appeal_modal.dart';
+import '../../wallet/view_models/wallet_view_model.dart';
 import '../view_models/feed_view_model.dart';
 import 'video_pool_market_sheet.dart';
 
@@ -225,7 +227,7 @@ class _VideoFeedCard extends StatelessWidget {
           ),
         ),
 
-        // Floating Frosted-Glass W's Momentum Pill (Giggles Image 4 aesthetic)
+        // Floating Frosted-Glass W's Momentum Pill (Clean, Dark OLED aesthetic)
         Positioned(
           left: 16,
           bottom: video.isSponsored ? 190 : 155,
@@ -234,33 +236,33 @@ class _VideoFeedCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
               decoration: BoxDecoration(
-                color: const Color(0xFF14141A).withOpacity(0.85),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: WsTokens.brandGold.withOpacity(0.55), width: 1.2),
-                boxShadow: [
+                color: const Color(0xCC16161E),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white24, width: 0.8),
+                boxShadow: const [
                   BoxShadow(
-                    color: WsTokens.brandGold.withOpacity(0.22),
-                    blurRadius: 12,
-                    spreadRadius: 1,
+                    color: Colors.black45,
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
                   ),
                 ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const WsGlyph(size: 15, color: WsTokens.brandGold, hasGlow: true),
-                  const SizedBox(width: 7),
+                  const WsGlyph(size: 14, color: WsTokens.brandGold, hasGlow: false),
+                  const SizedBox(width: 6),
                   Text(
                     '${numberFormat.format(video.wCount)} W\'s',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right, color: WsTokens.brandGold, size: 16),
+                  const Icon(Icons.chevron_right, color: Colors.white60, size: 16),
                 ],
               ),
             ),
@@ -397,8 +399,9 @@ class _VideoFeedCard extends StatelessWidget {
               ),
               const SizedBox(height: 18),
 
-              // 2. Official W's Sign Reaction Button (Replaces Like/Heart with W's Sign)
-              _WsReactionButton(
+              // 2. Freestanding W's Continuous Tap-To-Drop Action (No circular container!)
+              _WsFreestandingAction(
+                videoId: video.id,
                 initialCount: video.wCount > 0 ? video.wCount : 52000,
               ),
               const SizedBox(height: 16),
@@ -445,58 +448,116 @@ class _VideoFeedCard extends StatelessWidget {
   }
 }
 
-/// Official W's Sign Reaction Button:
-/// Replaces hearts/likes with the signature W's Sign (WsGlyph),
-/// featuring an animated scale bounce, glowing gold radiance, and haptic feedback.
-class _WsReactionButton extends StatefulWidget {
-  const _WsReactionButton({
+/// Freestanding W's Continuous Tap-To-Drop Action (No circular container!)
+/// Supports rapid continuous taps and long-press streaming as long as user has W's.
+/// Spawns cascading upward floating +1 ₩ badges with spring punch motion.
+class _WsFreestandingAction extends ConsumerStatefulWidget {
+  const _WsFreestandingAction({
+    required this.videoId,
     required this.initialCount,
   });
 
+  final String videoId;
   final int initialCount;
 
   @override
-  State<_WsReactionButton> createState() => _WsReactionButtonState();
+  ConsumerState<_WsFreestandingAction> createState() => _WsFreestandingActionState();
 }
 
-class _WsReactionButtonState extends State<_WsReactionButton> with SingleTickerProviderStateMixin {
-  late bool _isReacted;
+class _WsFreestandingActionState extends ConsumerState<_WsFreestandingAction> with SingleTickerProviderStateMixin {
   late int _count;
   late AnimationController _animController;
   late Animation<double> _scaleAnimation;
+  final List<_FloatingParticleData> _particles = [];
+  int _particleCounter = 0;
+  Timer? _streamTimer;
 
   @override
   void initState() {
     super.initState();
-    _isReacted = false;
     _count = widget.initialCount;
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 260),
+      duration: const Duration(milliseconds: 180),
     );
     _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.35), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 1.35, end: 1.0), weight: 50),
-    ]).animate(CurvedAnimation(parent: _animController, curve: Curves.easeInOut));
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.35), weight: 45),
+      TweenSequenceItem(tween: Tween(begin: 1.35, end: 0.95), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 20),
+    ]).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
   }
 
   @override
   void dispose() {
+    _streamTimer?.cancel();
     _animController.dispose();
     super.dispose();
   }
 
-  void _toggleReaction() {
+  void _dropSingleW() {
+    // 1. Check & debit from user wallet balance
+    final success = ref.read(walletViewModelProvider.notifier).spendW(1);
+    if (!success) {
+      HapticFeedback.mediumImpact();
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.bolt, color: WsTokens.brandGold, size: 18),
+              SizedBox(width: 8),
+              Text(
+                "You're out of W's! Top up in your Vault",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1F1F28),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          duration: const Duration(milliseconds: 1800),
+        ),
+      );
+      return;
+    }
+
+    // 2. Increment video momentum live
     HapticFeedback.lightImpact();
     _animController.forward(from: 0.0);
     setState(() {
-      _isReacted = !_isReacted;
-      if (_isReacted) {
-        _count += 1;
-      } else {
-        _count = max(0, _count - 1);
-      }
+      _count += 1;
+      _particleCounter += 1;
+      _particles.add(
+        _FloatingParticleData(
+          id: _particleCounter,
+          dx: (Random().nextDouble() * 28) - 14,
+        ),
+      );
     });
+
+    // 3. Dispatch to backend/state
+    ref.read(feedViewModelProvider.notifier).stakeW(widget.videoId, 1);
+  }
+
+  void _startContinuousStream() {
+    _dropSingleW();
+    _streamTimer?.cancel();
+    _streamTimer = Timer.periodic(const Duration(milliseconds: 110), (_) {
+      _dropSingleW();
+    });
+  }
+
+  void _stopContinuousStream() {
+    _streamTimer?.cancel();
+    _streamTimer = null;
+  }
+
+  void _removeParticle(int id) {
+    if (mounted) {
+      setState(() {
+        _particles.removeWhere((p) => p.id == id);
+      });
+    }
   }
 
   @override
@@ -504,53 +565,164 @@ class _WsReactionButtonState extends State<_WsReactionButton> with SingleTickerP
     final numberFormat = NumberFormat.compact();
 
     return GestureDetector(
-      onTap: _toggleReaction,
+      onTap: _dropSingleW,
+      onLongPressStart: (_) => _startContinuousStream(),
+      onLongPressEnd: (_) => _stopContinuousStream(),
+      onLongPressCancel: _stopContinuousStream,
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ScaleTransition(
-            scale: _scaleAnimation,
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _isReacted
-                    ? WsTokens.brandGold.withOpacity(0.22)
-                    : Colors.black.withOpacity(0.35),
-                border: Border.all(
-                  color: _isReacted ? WsTokens.brandGold : Colors.white24,
-                  width: _isReacted ? 1.5 : 1.0,
+          // Standalone Freestanding W's Glyph (NO circular container!)
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                // Floating Upward +1 ₩ Badges Fountain
+                for (final p in _particles)
+                  _FloatingWBadge(
+                    key: ValueKey(p.id),
+                    dx: p.dx,
+                    onComplete: () => _removeParticle(p.id),
+                  ),
+
+                // Pure Freestanding W's Sign with spring punch
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: const WsGlyph(
+                    size: 34,
+                    color: WsTokens.brandGold,
+                    strokeWidth: 2.8,
+                    hasGlow: false,
+                    hasDropShadow: true,
+                  ),
                 ),
-                boxShadow: _isReacted
-                    ? [
-                        BoxShadow(
-                          color: WsTokens.brandGold.withOpacity(0.55),
-                          blurRadius: 14,
-                          spreadRadius: 2,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Center(
-                child: WsGlyph(
-                  size: 24,
-                  color: _isReacted ? WsTokens.brandGold : Colors.white,
-                  hasGlow: _isReacted,
-                ),
-              ),
+              ],
             ),
           ),
           const SizedBox(height: 4),
+          // Tabular count with subtle drop shadow for high contrast
           Text(
             numberFormat.format(_count),
-            style: TextStyle(
-              color: _isReacted ? WsTokens.brandGold : Colors.white,
-              fontSize: 11,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
+              letterSpacing: 0.1,
+              shadows: [
+                Shadow(
+                  color: Colors.black87,
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FloatingParticleData {
+  _FloatingParticleData({required this.id, required this.dx});
+  final int id;
+  final double dx;
+}
+
+class _FloatingWBadge extends StatefulWidget {
+  const _FloatingWBadge({
+    required this.dx,
+    required this.onComplete,
+    super.key,
+  });
+
+  final double dx;
+  final VoidCallback onComplete;
+
+  @override
+  State<_FloatingWBadge> createState() => _FloatingWBadgeState();
+}
+
+class _FloatingWBadgeState extends State<_FloatingWBadge> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _translateY;
+  late Animation<double> _opacity;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _translateY = Tween<double>(begin: 0.0, end: -65.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.7, end: 1.15), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 1.15, end: 1.0), weight: 70),
+    ]).animate(_controller);
+
+    _opacity = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 65),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 35),
+    ]).animate(_controller);
+
+    _controller.forward().then((_) => widget.onComplete());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(widget.dx, _translateY.value),
+          child: Transform.scale(
+            scale: _scale.value,
+            child: Opacity(
+              opacity: _opacity.value,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: const Color(0xDD12121A),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: WsTokens.brandGold.withOpacity(0.6), width: 0.8),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Text(
+          '+1 ₩',
+          style: TextStyle(
+            color: WsTokens.brandGold,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
+          ),
+        ),
       ),
     );
   }
@@ -570,14 +742,29 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 28),
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 28,
+            shadows: const [
+              Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1)),
+            ],
+          ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              shadows: [
+                Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1)),
+              ],
+            ),
           ),
         ],
       ),

@@ -71,10 +71,37 @@ class WalletViewModel extends StateNotifier<WalletState> {
       );
     } catch (e) {
       state = state.copyWith(
+        summary: state.summary ?? const WalletSummary(
+          availableW: 2500,
+          reservedW: 100,
+          earnedWBalance: 600,
+          purchasedWBalance: 2000,
+        ),
         isLoading: false,
         errorMessage: e.toString(),
       );
     }
+  }
+
+  bool spendW(int amount) {
+    final current = state.summary ?? const WalletSummary(
+      availableW: 2500,
+      reservedW: 100,
+      earnedWBalance: 600,
+      purchasedWBalance: 2000,
+    );
+    if (current.availableW >= amount) {
+      state = state.copyWith(
+        summary: WalletSummary(
+          availableW: current.availableW - amount,
+          reservedW: current.reservedW,
+          purchasedWBalance: current.purchasedWBalance,
+          earnedWBalance: current.earnedWBalance,
+        ),
+      );
+      return true;
+    }
+    return false;
   }
 }
 

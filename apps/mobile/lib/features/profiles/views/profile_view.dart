@@ -207,72 +207,72 @@ class ProfileView extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
-                  // Avatar with status thought bubble and story (+) button (Matching Screenshot 4)
-                  Center(
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.center,
-                      children: [
-                        // Thought bubble status
-                        Positioned(
-                          top: -24,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF26262E),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Text('⚡ ', style: TextStyle(fontSize: 11)),
-                                Text(
-                                  'Spill the tea on Ws',
-                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        // Avatar
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: WsTokens.brandGold, width: 2.5),
-                            image: DecorationImage(
-                              image: NetworkImage(profile.avatarUrl),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-
-                        // Cyan/Pink Plus Button for stories
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [WsTokens.tiktokCyan, WsTokens.tiktokPink],
-                              ),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.black, width: 2),
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.add, color: Colors.white, size: 16),
-                            ),
+                  // Status thought bubble (Natural vertical flow, immune to status bar or AppBar clipping)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C1C24),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white12, width: 0.8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Text('⚡ ', style: TextStyle(fontSize: 11)),
+                        Text(
+                          'Spill the tea on Ws',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.1,
                           ),
                         ),
                       ],
                     ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Avatar with clean gold ring and story plus badge
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: WsTokens.brandGold, width: 2.2),
+                          image: DecorationImage(
+                            image: NetworkImage(profile.avatarUrl),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+
+                      // Cyan/Pink Plus Button for stories
+                      Positioned(
+                        bottom: 0,
+                        right: 2,
+                        child: Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [WsTokens.tiktokCyan, WsTokens.tiktokPink],
+                            ),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.black, width: 2),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.add, color: Colors.white, size: 16),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 12),
@@ -307,68 +307,77 @@ class ProfileView extends ConsumerWidget {
 
                   const SizedBox(height: 16),
 
-                  // Action Buttons Row: Edit profile, Share profile, Creator Studio
+                  // Action Buttons Row: Edit profile, Share profile (Appllama iOS/Android HIG fidelity)
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white24),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            backgroundColor: const Color(0xFF1E1E24),
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1C1C24),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(color: Colors.white12, width: 0.8),
+                              ),
+                              padding: EdgeInsets.zero,
+                            ),
+                            child: const Text('Edit profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
-                          child: const Text('Edit profile', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white24),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            backgroundColor: const Color(0xFF1E1E24),
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1C1C24),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(color: Colors.white12, width: 0.8),
+                              ),
+                              padding: EdgeInsets.zero,
+                            ),
+                            child: const Text('Share profile', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
-                          child: const Text('Share profile', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
-                  // Prominent W's Creator Studio Button
+                  // W's Creator Studio Card (Dark OLED with Emerald Split Badge)
                   GestureDetector(
                     onTap: () => context.push('/studio'),
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            WsTokens.brandGold.withOpacity(0.2),
-                            WsTokens.brandEmerald.withOpacity(0.15),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: WsTokens.brandGold.withOpacity(0.4)),
+                        color: const Color(0xFF14141C),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white12, width: 0.8),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             children: const [
-                              Icon(Icons.video_library, color: WsTokens.brandGold, size: 20),
+                              Icon(Icons.video_library_outlined, color: WsTokens.brandGold, size: 20),
                               SizedBox(width: 10),
                               Text(
                                 "W's Creator Studio",
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -378,8 +387,9 @@ class ProfileView extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: WsTokens.brandEmerald.withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(4),
+                                  color: WsTokens.brandEmerald.withOpacity(0.18),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: WsTokens.brandEmerald.withOpacity(0.4), width: 0.8),
                                 ),
                                 child: const Text(
                                   '55% AD SPLIT',
@@ -387,11 +397,12 @@ class ProfileView extends ConsumerWidget {
                                     color: WsTokens.brandEmerald,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.4,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              const Icon(Icons.arrow_forward_ios, color: Colors.white60, size: 14),
+                              const Icon(Icons.arrow_forward_ios, color: Colors.white38, size: 12),
                             ],
                           ),
                         ],

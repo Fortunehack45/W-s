@@ -157,9 +157,11 @@ class ScaffoldWithTikTokNavBar extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.black,
       body: navigationShell,
-      bottomNavigationBar: Container(
-        height: 64,
-        decoration: const BoxDecoration(
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          height: 56,
+          decoration: const BoxDecoration(
           color: Colors.black,
           border: Border(
             top: BorderSide(color: Color(0xFF1F1F24), width: 0.5),
@@ -256,7 +258,8 @@ class ScaffoldWithTikTokNavBar extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

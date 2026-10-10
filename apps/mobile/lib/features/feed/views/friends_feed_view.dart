@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -145,20 +146,45 @@ class _FriendsVideoCard extends StatefulWidget {
   State<_FriendsVideoCard> createState() => _FriendsVideoCardState();
 }
 
-class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerProviderStateMixin {
+class _FriendsVideoCardState extends State<_FriendsVideoCard> with TickerProviderStateMixin {
   late AnimationController _discAnim;
-  bool _isLiked = false;
+  late AnimationController _punchAnim;
+  late Animation<double> _scaleAnimation;
+  late int _likes;
+  final List<Map<String, dynamic>> _particles = [];
+  int _particleId = 0;
 
   @override
   void initState() {
     super.initState();
+    _likes = widget.item['likes'] as int? ?? 71;
     _discAnim = AnimationController(vsync: this, duration: const Duration(seconds: 5))..repeat();
+    _punchAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.35), weight: 45),
+      TweenSequenceItem(tween: Tween(begin: 1.35, end: 0.95), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 0.95, end: 1.0), weight: 20),
+    ]).animate(CurvedAnimation(parent: _punchAnim, curve: Curves.easeOutCubic));
   }
 
   @override
   void dispose() {
     _discAnim.dispose();
+    _punchAnim.dispose();
     super.dispose();
+  }
+
+  void _dropW() {
+    HapticFeedback.lightImpact();
+    _punchAnim.forward(from: 0.0);
+    setState(() {
+      _likes += 1;
+      _particleId += 1;
+      _particles.add({
+        'id': _particleId,
+        'dx': (Random().nextDouble() * 28) - 14,
+      });
+    });
   }
 
   @override
@@ -233,38 +259,38 @@ class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerP
                   ],
                 ),
               ),
-              // Floating Frosted W's Momentum Pill (Giggles Image 4 style)
+              // Floating Frosted W's Momentum Pill (Clean Dark OLED)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF14141A).withOpacity(0.85),
+                  color: const Color(0xCC16161E),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: WsTokens.brandGold.withOpacity(0.55), width: 1.2),
-                  boxShadow: [
+                  border: Border.all(color: Colors.white24, width: 0.8),
+                  boxShadow: const [
                     BoxShadow(
-                      color: WsTokens.brandGold.withOpacity(0.22),
-                      blurRadius: 10,
-                      spreadRadius: 1,
+                      color: Colors.black45,
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const WsGlyph(size: 14, color: WsTokens.brandGold, hasGlow: true),
+                    const WsGlyph(size: 14, color: WsTokens.brandGold, hasGlow: false, hasDropShadow: true),
                     const SizedBox(width: 6),
                     Text(
                       '${numFmt.format(item['wCount'])} W\'s',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right, color: WsTokens.brandGold, size: 16),
+                    const Icon(Icons.chevron_right, color: Colors.white60, size: 16),
                   ],
                 ),
               ),
@@ -352,90 +378,126 @@ class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerP
               ),
               const SizedBox(height: 16),
 
-              // W's Reaction Button (Replaces Heart/Like with signature W's Sign)
+              // Freestanding W's Continuous Tap-To-Drop Action (No circular container!)
               GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() => _isLiked = !_isLiked);
-                },
+                onTap: _dropW,
+                behavior: HitTestBehavior.opaque,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
+                    SizedBox(
                       width: 44,
                       height: 44,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _isLiked ? WsTokens.brandGold.withOpacity(0.22) : Colors.black.withOpacity(0.35),
-                        border: Border.all(
-                          color: _isLiked ? WsTokens.brandGold : Colors.white24,
-                          width: _isLiked ? 1.5 : 1.0,
-                        ),
-                        boxShadow: _isLiked
-                            ? [
-                                BoxShadow(
-                                  color: WsTokens.brandGold.withOpacity(0.55),
-                                  blurRadius: 14,
-                                  spreadRadius: 2,
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Center(
-                        child: WsGlyph(
-                          size: 24,
-                          color: _isLiked ? WsTokens.brandGold : Colors.white,
-                          hasGlow: _isLiked,
-                        ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          for (final p in _particles)
+                            _FriendsFloatingBadge(
+                              key: ValueKey(p['id']),
+                              dx: p['dx'] as double,
+                              onComplete: () {
+                                if (mounted) {
+                                  setState(() {
+                                    _particles.removeWhere((item) => item['id'] == p['id']);
+                                  });
+                                }
+                              },
+                            ),
+                          ScaleTransition(
+                            scale: _scaleAnimation,
+                            child: const WsGlyph(
+                              size: 34,
+                              color: WsTokens.brandGold,
+                              strokeWidth: 2.8,
+                              hasGlow: false,
+                              hasDropShadow: true,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      numFmt.format(item['likes'] + (_isLiked ? 1 : 0)),
-                      style: TextStyle(
-                        color: _isLiked ? WsTokens.brandGold : Colors.white,
-                        fontSize: 11,
+                      numFmt.format(_likes),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
+                        shadows: [
+                          Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1)),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // Comment
               Column(
                 children: [
-                  const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 28),
+                  const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.white,
+                    size: 28,
+                    shadows: [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))],
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     numFmt.format(item['comments']),
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      shadows: [Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1))],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // Save / Bookmark
               Column(
                 children: [
-                  const Icon(Icons.bookmark_border, color: Colors.white, size: 28),
+                  const Icon(
+                    Icons.bookmark_border,
+                    color: Colors.white,
+                    size: 28,
+                    shadows: [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))],
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     numFmt.format(item['saves']),
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      shadows: [Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1))],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
 
               // Share
               Column(
                 children: [
-                  const Icon(Icons.share_outlined, color: Colors.white, size: 28),
+                  const Icon(
+                    Icons.share_outlined,
+                    color: Colors.white,
+                    size: 28,
+                    shadows: [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))],
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     numFmt.format(item['shares']),
-                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      shadows: [Shadow(color: Colors.black87, blurRadius: 4, offset: Offset(0, 1))],
+                    ),
                   ),
                 ],
               ),
@@ -468,6 +530,101 @@ class _FriendsVideoCardState extends State<_FriendsVideoCard> with SingleTickerP
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FriendsFloatingBadge extends StatefulWidget {
+  const _FriendsFloatingBadge({
+    required this.dx,
+    required this.onComplete,
+    super.key,
+  });
+
+  final double dx;
+  final VoidCallback onComplete;
+
+  @override
+  State<_FriendsFloatingBadge> createState() => _FriendsFloatingBadgeState();
+}
+
+class _FriendsFloatingBadgeState extends State<_FriendsFloatingBadge> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _translateY;
+  late Animation<double> _opacity;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _translateY = Tween<double>(begin: 0.0, end: -65.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.7, end: 1.15), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 1.15, end: 1.0), weight: 70),
+    ]).animate(_controller);
+
+    _opacity = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 65),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 35),
+    ]).animate(_controller);
+
+    _controller.forward().then((_) => widget.onComplete());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(widget.dx, _translateY.value),
+          child: Transform.scale(
+            scale: _scale.value,
+            child: Opacity(
+              opacity: _opacity.value,
+              child: child,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: const Color(0xDD12121A),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: WsTokens.brandGold.withOpacity(0.6), width: 0.8),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black54,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Text(
+          '+1 ₩',
+          style: TextStyle(
+            color: WsTokens.brandGold,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.2,
+          ),
+        ),
+      ),
     );
   }
 }

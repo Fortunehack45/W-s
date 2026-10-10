@@ -29,6 +29,7 @@ class WsGlyph extends StatelessWidget {
     this.size = 24.0,
     this.color = WsTokens.brandGold,
     this.hasGlow = true,
+    this.hasDropShadow = false,
     this.strokeWidth = 2.4,
     super.key,
   });
@@ -36,6 +37,7 @@ class WsGlyph extends StatelessWidget {
   final double size;
   final Color color;
   final bool hasGlow;
+  final bool hasDropShadow;
   final double strokeWidth;
 
   @override
@@ -47,6 +49,7 @@ class WsGlyph extends StatelessWidget {
         painter: _WsGlyphPainter(
           color: color,
           hasGlow: hasGlow,
+          hasDropShadow: hasDropShadow,
           strokeWidth: strokeWidth,
         ),
       ),
@@ -58,17 +61,36 @@ class _WsGlyphPainter extends CustomPainter {
   _WsGlyphPainter({
     required this.color,
     required this.hasGlow,
+    required this.hasDropShadow,
     required this.strokeWidth,
   });
 
   final Color color;
   final bool hasGlow;
+  final bool hasDropShadow;
   final double strokeWidth;
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+
+    // Optional natural drop shadow for high readability on video backdrops
+    if (hasDropShadow) {
+      final shadowPaint = Paint()
+        ..color = Colors.black.withOpacity(0.7)
+        ..strokeWidth = strokeWidth + 1.2
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0)
+        ..style = PaintingStyle.stroke;
+
+      canvas.save();
+      canvas.translate(0, 1.2);
+      _drawWPath(canvas, w, h, shadowPaint);
+      _drawCrossbars(canvas, w, h, shadowPaint);
+      canvas.restore();
+    }
 
     final paint = Paint()
       ..color = color
@@ -125,5 +147,6 @@ class _WsGlyphPainter extends CustomPainter {
   bool shouldRepaint(covariant _WsGlyphPainter oldDelegate) =>
       oldDelegate.color != color ||
       oldDelegate.hasGlow != hasGlow ||
+      oldDelegate.hasDropShadow != hasDropShadow ||
       oldDelegate.strokeWidth != strokeWidth;
 }
