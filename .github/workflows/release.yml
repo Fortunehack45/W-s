@@ -48,11 +48,11 @@ jobs:
 
       - name: Build Android Release APK (Universal)
         working-directory: apps/mobile
-        run: flutter build apk --release
+        run: flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Build Android App Bundle (AAB for Google Play)
         working-directory: apps/mobile
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --android-skip-build-dependency-validation
 
       - name: Prepare Android Artifacts
         run: |

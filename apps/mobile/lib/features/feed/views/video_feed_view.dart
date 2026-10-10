@@ -16,6 +16,7 @@ class VideoFeedView extends ConsumerStatefulWidget {
 
 class _VideoFeedViewState extends ConsumerState<VideoFeedView> {
   final PageController _pageController = PageController();
+  int _currentIndex = 0;
 
   @override
   void dispose() {

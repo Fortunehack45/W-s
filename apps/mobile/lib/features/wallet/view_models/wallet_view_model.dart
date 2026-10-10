@@ -2,9 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../models/wallet_models.dart';
 
-final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient();
-});
 
 class WalletRepository {
   WalletRepository({required this.apiClient});

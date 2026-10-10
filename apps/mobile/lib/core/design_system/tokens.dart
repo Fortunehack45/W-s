@@ -81,6 +81,8 @@ class AppColors {
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFFA0A0B2);
   static const Color textTertiary = Color(0xFF65657A);
+  static const Color crimsonError = Color(0xFFFF334B);
+  static const Color cardSurface = Color(0xFF1A1A22);
 }
 
 class AppSpacing {
