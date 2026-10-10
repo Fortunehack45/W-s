@@ -1,0 +1,190 @@
+name: W's Release & Artifact Build (APK, AAB & Multiplatform Binaries)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      draft:
+        description: 'Create draft release'
+        type: boolean
+        default: false
+      prerelease:
+        description: 'Mark as pre-release'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android Release (APK & AAB)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Mobile Dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Build Android Release APK (Universal)
+        working-directory: apps/mobile
+        run: flutter build apk --release
+
+      - name: Build Android App Bundle (AAB for Google Play)
+        working-directory: apps/mobile
+        run: flutter build appbundle --release
+
+      - name: Prepare Android Artifacts
+        run: |
+          mkdir -p release-artifacts
+          TAG="${{ github.ref_name }}"
+          if [[ -z "$TAG" || "$TAG" == "main" || "$TAG" == "master" ]]; then
+            TAG="${{ inputs.tag_name || 'v1.0.0' }}"
+          fi
+          
+          # Copy Universal APK
+          if [ -f apps/mobile/build/app/outputs/flutter-apk/app-release.apk ]; then
+            cp apps/mobile/build/app/outputs/flutter-apk/app-release.apk release-artifacts/ws-app-${TAG}-universal-release.apk
+          fi
+          
+          # Copy App Bundle (AAB)
+          if [ -f apps/mobile/build/app/outputs/bundle/release/app-release.aab ]; then
+            cp apps/mobile/build/app/outputs/bundle/release/app-release.aab release-artifacts/ws-app-${TAG}-release.aab
+          fi
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-packages
+          path: release-artifacts/*
+          if-no-files-found: error
+
+  build-backend-binaries:
+    name: Cross-Compile Go Backend Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: services/api/go.sum
+
+      - name: Build Binaries for Linux, Windows, and macOS
+        working-directory: services/api
+        run: |
+          mkdir -p ../../backend-artifacts
+          TAG="${{ github.ref_name }}"
+          if [[ -z "$TAG" || "$TAG" == "main" || "$TAG" == "master" ]]; then
+            TAG="${{ inputs.tag_name || 'v1.0.0' }}"
+          fi
+
+          # Linux x86_64
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ../../backend-artifacts/ws-server-${TAG}-linux-amd64 ./cmd/server
+          
+          # Windows x86_64 (.exe)
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o ../../backend-artifacts/ws-server-${TAG}-windows-amd64.exe ./cmd/server
+          
+          # macOS Apple Silicon (ARM64)
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o ../../backend-artifacts/ws-server-${TAG}-darwin-arm64 ./cmd/server
+
+      - name: Upload Backend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-binaries
+          path: backend-artifacts/*
+          if-no-files-found: error
+
+  publish-github-release:
+    name: Publish Official GitHub Release
+    needs: [build-android, build-backend-binaries]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Android Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-packages
+          path: dist
+
+      - name: Download Backend Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-binaries
+          path: dist
+
+      - name: Compute Checksums
+        working-directory: dist
+        run: |
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Determine Release Tag
+        id: release_info
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [[ -z "$TAG" || "$TAG" == "main" || "$TAG" == "master" ]]; then
+            TAG="${{ inputs.tag_name || 'v1.0.0' }}"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Official GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: "W's Official Release ${{ steps.release_info.outputs.tag }}"
+          body: |
+            # 🚀 W's Platform Official Release (${{ steps.release_info.outputs.tag }})
+
+            ### 📱 Mobile Android Packages
+            - **Universal APK** (direct installation on Android phones): `ws-app-${{ steps.release_info.outputs.tag }}-universal-release.apk`
+            - **Google Play App Bundle (AAB)**: `ws-app-${{ steps.release_info.outputs.tag }}-release.aab`
+
+            ### ⚡ High-Performance Go Backend Binaries
+            - **Linux (x86_64)**: `ws-server-${{ steps.release_info.outputs.tag }}-linux-amd64`
+            - **Windows (x86_64)**: `ws-server-${{ steps.release_info.outputs.tag }}-windows-amd64.exe`
+            - **macOS (Apple Silicon)**: `ws-server-${{ steps.release_info.outputs.tag }}-darwin-arm64`
+
+            ---
+
+            ### 🌟 Core Architecture & Features:
+            1. **TikTok-Inspired UI/UX**: Fullscreen vertical FYP video feed, right action rail with dynamic W bonding curve stake gauge and spinning vinyl disc, friends story heads and location pills, camera studio with duration & shutter controls, inbox with thought bubbles & streaks.
+            2. **Dynamic W's Momentum Pools**: Zero-cost free video uploads ($0 W gas) with linear bonding curve liquidity pools and 2% creator royalties.
+            3. **Anti-Bot & Passive Preview Mode**: Automatic spam detection (>100 comments/day) with view nullification (`is_counted = false`) and in-app appeals.
+            4. **Canonical Video Chats & 1-on-1 Streaks**: Top backer badge rooms and daily messaging streaks with serialized NFT milestone card minting.
+            5. **Creator Monetization**: 5-point gate qualification with 55% platform ad revenue split paid in real USD fiat ($\ge \$20.00$ payout threshold).
+            6. **Collectible Card English Auction Marketplace**: Serial-numbered cards, authoritative W wallet escrow, instant outbid refund releases, and anti-sniping protection.
+            7. **Call It Prediction Markets**: Entertainment virtual game tokens with parimutuel proportional pool distributions.
+            8. **Super Admin Control Center**: Web dashboard at `/admin` and native mobile console covering user registry, live audit stream, comment spam velocity monitor, video chats, and direct messages (DMs/DNS).
+
+            Verify file integrity with `checksums.txt`.
+          files: |
+            dist/*
+          draft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || false }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

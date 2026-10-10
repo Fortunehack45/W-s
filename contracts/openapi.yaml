@@ -1,0 +1,391 @@
+openapi: 3.1.0
+info:
+  title: "W's Platform API"
+  version: "1.0.0"
+  description: "REST API for W's social video platform, dynamic momentum economy, persistent video chat, and collectible card marketplace."
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+paths:
+  /me:
+    get:
+      summary: Get current authenticated user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /wallet:
+    get:
+      summary: Get current user wallet summary
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Wallet balances
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletSummary'
+
+  /wallet/ledger:
+    get:
+      summary: Get immutable wallet transaction ledger
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Ledger entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerPage'
+
+  /videos/{videoId}/w/pool:
+    get:
+      summary: Get live dynamic W's pool status for a video
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Video pool metrics and share pricing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoWPool'
+
+  /videos/{videoId}/w/stake:
+    post:
+      summary: Stake W's into video pool (Backing video / Buying shares)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StakeRequest'
+      responses:
+        '200':
+          description: Staking confirmed, shares minted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /videos/{videoId}/w/unstake:
+    post:
+      summary: Unstake shares from video pool (Cashing out W's / Profit taking)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: videoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnstakeRequest'
+      responses:
+        '200':
+          description: Unstaking confirmed, W's payout credited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnstakeResponse'
+
+  /moderation/status/me:
+    get:
+      summary: Get current account moderation and restriction status
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Moderation status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModerationStatus'
+
+  /moderation/appeals:
+    post:
+      summary: Submit in-app account restriction appeal
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppealRequest'
+      responses:
+        '201':
+          description: Appeal submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppealResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      required:
+        - id
+        - username
+        - displayName
+        - netWEarned
+        - isPremium
+        - restrictionStatus
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+        netWEarned:
+          type: integer
+          description: Lifetime net realized W's gained + royalties
+        isPremium:
+          type: boolean
+        verifiedFollowersCount:
+          type: integer
+        totalWatchMinutes:
+          type: integer
+        isMonetizationApproved:
+          type: boolean
+        restrictionStatus:
+          type: string
+          enum: [normal, under_review, shadowbanned, restricted, suspended]
+
+    WalletSummary:
+      type: object
+      required:
+        - availableW
+        - reservedW
+        - earnedWBalance
+        - purchasedWBalance
+      properties:
+        availableW:
+          type: integer
+        reservedW:
+          type: integer
+        earnedWBalance:
+          type: integer
+        purchasedWBalance:
+          type: integer
+
+    LedgerPage:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              eventType:
+                type: string
+              pointAmount:
+                type: integer
+              balanceSource:
+                type: string
+              referenceType:
+                type: string
+              referenceId:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+        nextCursor:
+          type: string
+
+    VideoWPool:
+      type: object
+      required:
+        - videoId
+        - currentWCount
+        - reserveBalance
+        - totalShares
+        - currentSharePriceW
+        - creatorRoyaltyBps
+      properties:
+        videoId:
+          type: string
+        currentWCount:
+          type: integer
+        reserveBalance:
+          type: integer
+        totalShares:
+          type: integer
+        currentSharePriceW:
+          type: integer
+        creatorRoyaltyBps:
+          type: integer
+
+    StakeRequest:
+      type: object
+      required:
+        - wAmount
+        - minSharesOut
+        - idempotencyKey
+      properties:
+        wAmount:
+          type: integer
+          minimum: 1
+        minSharesOut:
+          type: integer
+          minimum: 1
+        idempotencyKey:
+          type: string
+
+    StakeResponse:
+      type: object
+      properties:
+        sharesMinted:
+          type: integer
+        wDeposited:
+          type: integer
+        creatorRoyaltyW:
+          type: integer
+        newVideoWCount:
+          type: integer
+        userAvailableW:
+          type: integer
+
+    UnstakeRequest:
+      type: object
+      required:
+        - sharesAmount
+        - minWOut
+        - idempotencyKey
+      properties:
+        sharesAmount:
+          type: integer
+          minimum: 1
+        minWOut:
+          type: integer
+          minimum: 1
+        idempotencyKey:
+          type: string
+
+    UnstakeResponse:
+      type: object
+      properties:
+        sharesBurned:
+          type: integer
+        wPayout:
+          type: integer
+        creatorRoyaltyW:
+          type: integer
+        newVideoWCount:
+          type: integer
+        userAvailableW:
+          type: integer
+
+    ModerationStatus:
+      type: object
+      properties:
+        restrictionStatus:
+          type: string
+        isReadOnlyPreview:
+          type: boolean
+        reason:
+          type: string
+        activeAppealId:
+          type: string
+
+    AppealRequest:
+      type: object
+      required:
+        - appealMessage
+      properties:
+        appealMessage:
+          type: string
+          minLength: 10
+          maxLength: 2000
+
+    AppealResponse:
+      type: object
+      properties:
+        appealId:
+          type: string
+        status:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string

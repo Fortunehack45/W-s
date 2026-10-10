@@ -1,0 +1,40 @@
+# Binaries & build outputs
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go
+services/api/vendor/
+services/api/*.exe
+
+# Flutter & Dart
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.packages
+apps/mobile/build/
+apps/mobile/android/.gradle
+apps/mobile/android/local.properties
+apps/mobile/android/app/build/
+
+# Environment and Secrets
+.env
+*.env.local
+*.pem
+*.key
+credentials.json
+service-account.json
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
